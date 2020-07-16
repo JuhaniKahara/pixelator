@@ -6,9 +6,11 @@ import logging
 from PIL import Image
 import numpy as np
 import time
+import sys
 
 #colors = [5, 4, 3, 2, 0]
 colors = [ 4, 3, 2, 0]
+black = (0, 0, 0)
 
 def get_even_thresholds(n):
     thresholds = [0]
@@ -18,34 +20,59 @@ def get_even_thresholds(n):
     thresholds.append(255)
     return thresholds
 
+
 def get_thresholds():
     #return [0, 60, 105, 155, 190, 255]
     return [0, 70, 140, 190, 255]
 
-def drawSickSack(img, n, margin, pos, size):
-    if n == 1:
-        img = cv2.line(img, (pos[0], pos[1] + int(size / 2)), (pos[0] + size, pos[1] + int(size / 2)), (0, 0, 0), 1)
-    elif n == 2:
-        s = round(size / n)
-        img = cv2.line(img, (pos[0], pos[1] + int(size / 2)), (pos[0]+s, pos[1]), (0, 0, 0), 1)
-        img = cv2.line(img, (pos[0] + s, pos[1]), (pos[0] + size, pos[1] + int(size / 2)) , (0, 0, 0), 1)
-    elif n == 3:
-        s = round(size / n)
-        img = cv2.line(img, (pos[0], pos[1] + int(size / 2)), (pos[0] + s, pos[1]), (0, 0, 0), 1)
-        img = cv2.line(img, (pos[0] + s, pos[1]), (pos[0] + 2 * s, pos[1] + size), (0, 0, 0), 1)
-        img = cv2.line(img, (pos[0] + 2 * s, pos[1] + size), (pos[0] + size, pos[1] + int(size / 2)), (0, 0, 0), 1)
-    elif n == 4:
-        s = round(size / n)
-        img = cv2.line(img, (pos[0], pos[1] + int(size / 2)), (pos[0] + s, pos[1]), (0, 0, 0), 1)
-        img = cv2.line(img, (pos[0] + s, pos[1]), (pos[0] + 2 * s, pos[1] + size), (0, 0, 0), 1)
-        img = cv2.line(img, (pos[0] + 2 * s, pos[1] + size), (pos[0] + 3 * s, pos[1]), (0, 0, 0), 1)
-        img = cv2.line(img, (pos[0] + 3 * s, pos[1]), (pos[0] + size, pos[1] + int(size / 2)), (0, 0, 0), 1)
 
+def draw(startX, startY, stopX, stopY, outfile, img):
+    outfile.write('G01 X{} Y{}\n'.format(startX, startY))
+    outfile.write('G00 Z0\n')
+    outfile.write('G01 X{} Y{}\n'.format(stopX, stopY))
+    img = cv2.line(img, (startX, startY), (stopX, stopY), black, 1)
+
+
+def drawSickSack(img, n, margin, pos, size, outfile):
+    if n == 0:
+        outfile.write('G00 Z2.00\n')
+        return None
+    if n == 1:
+        startX = pos[0]
+        startY = pos[1] + int(size / 2)
+        stopX = pos[0] + size
+        stopY = pos[1] + int(size / 2)
+        draw(startX, startY, stopX, stopY, outfile, img)
+    elif n > 1:
+        s = round(size / n)
+        y_stop = pos[1] + int(size / 2)
+        for i in range(n):
+            if i == 0:
+                # Starting y-coordinate is in the middle of the square
+                startX = pos[0]
+                startY = y_stop
+                stopX = pos[0] + (i + 1) * s
+                stopY = pos[1]
+            elif i == n - 1:
+                # Stopping y-coordinate is in the middle of the square
+                startX = pos[0] + i * s
+                startY = (n % 2) * size + pos[1]
+                stopX = pos[0] + size
+                stopY = y_stop
+            else:
+                # Y coordinate is at top or bottom of the square
+                startX = pos[0] + i * s
+                startY = ((i + 1) % 2) * size + pos[1]
+                stopX = pos[0] + (i + 1) * s
+                stopY = (i % 2) * size + pos[1]
+            draw(startX, startY, stopX, stopY, outfile, img)
 
 
 def testSickSack():
     finalImg = np.ones((100, 100 , 3)) * 255
-    drawSickSack(finalImg, 4, 0, (0,0), 10)
+    file = open('out.txt','w')
+
+    drawSickSack(finalImg, 4, 0, (30,30), 12, file)
 
     plt.imshow(finalImg)
     plt.show()
@@ -53,9 +80,11 @@ def testSickSack():
 
 def drawLines(img, n, margin, pos, size):
     # Draws n evenly spaced lines to a square starting from pos
+    # Margin not supported yet
     dist = round(size / (n + 1))
     for i in range(n):
         img = cv2.line(img, (pos[0], pos[1]+(i+1)*dist), (pos[0]+size, pos[1]+(i+1)*dist),(0,0,0),1)
+
 
 def choose_color(data, thresholds):
     for i in range(len(thresholds)):
@@ -63,19 +92,20 @@ def choose_color(data, thresholds):
             return colors[i-1]
 
 def handle_pixels(imageThumbnail):
+
     print('Size of the original greyscale thumbnail: ' + str(imageThumbnail.size))
     # Create empty image
     height = imageThumbnail.size[0]
     width = imageThumbnail.size[1]
-    finalImg = np.ones((width * 10, height * 10 , 3)) * 255
+    size = 6
+    finalImg = np.ones((width * size, height * size , 3)) * 255
 
-    size = 10
-
+    outfile = open('outTest.txt', 'w')
     for i in range(height):
         for j in range(width):
             colors = choose_color(imageThumbnail.getpixel((i, j)), get_thresholds())
             #drawLines(finalImg, colors, 0, (size*i, size*j), size)
-            drawSickSack(finalImg, colors, 0, (size * i, size * j), size)
+            drawSickSack(finalImg, colors, 0, (size * i, size * j), size, outfile)
 
     plt.imshow(finalImg)
     plt.show()
@@ -96,3 +126,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     #testSickSack()
     handle_image(args.file, args.scale)
+
