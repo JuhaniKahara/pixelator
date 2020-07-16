@@ -27,15 +27,17 @@ def get_thresholds():
 
 
 def draw(startX, startY, stopX, stopY, outfile, img):
-    outfile.write('G01 X{} Y{}\n'.format(startX, startY))
-    outfile.write('G00 Z0\n')
-    outfile.write('G01 X{} Y{}\n'.format(stopX, stopY))
+    outfile.write('G01 X{} Y{} F3000\n'.format(startX, startY))
+    outfile.write('G01 Z0 F3000\n')
+    outfile.write('G01 X{} Y{} F3000\n'.format(stopX, stopY))
     img = cv2.line(img, (startX, startY), (stopX, stopY), black, 1)
 
 
 def drawSickSack(img, n, margin, pos, size, outfile):
+   # time.sleep(3)
+   # print(pos)
     if n == 0:
-        outfile.write('G00 Z2.00\n')
+        outfile.write('G01 Z2.00 F3000\n')
         return None
     if n == 1:
         startX = pos[0]
@@ -70,7 +72,7 @@ def drawSickSack(img, n, margin, pos, size, outfile):
 
 def testSickSack():
     finalImg = np.ones((100, 100 , 3)) * 255
-    file = open('out.txt','w')
+    file = open('out_test_sicksak.txt','w')
 
     drawSickSack(finalImg, 4, 0, (30,30), 12, file)
 
@@ -92,21 +94,19 @@ def choose_color(data, thresholds):
             return colors[i-1]
 
 def handle_pixels(imageThumbnail):
-
     print('Size of the original greyscale thumbnail: ' + str(imageThumbnail.size))
     # Create empty image
-    height = imageThumbnail.size[0]
-    width = imageThumbnail.size[1]
+    width = imageThumbnail.size[0]
+    height = imageThumbnail.size[1]
     size = 6
-    finalImg = np.ones((width * size, height * size , 3)) * 255
-
-    outfile = open('outTest.txt', 'w')
-    for i in range(height):
-        for j in range(width):
-            colors = choose_color(imageThumbnail.getpixel((i, j)), get_thresholds())
+    finalImg = np.ones((height * size, width * size, 3)) * 255
+    outfile = open('out.txt', 'w')
+    for j in range(height):
+        outfile.write('G01 Z2.00 F3000\n')
+        for i in range(width):
+            color = choose_color(imageThumbnail.getpixel((i, j)), get_thresholds())
             #drawLines(finalImg, colors, 0, (size*i, size*j), size)
-            drawSickSack(finalImg, colors, 0, (size * i, size * j), size, outfile)
-
+            drawSickSack(finalImg, color, 0, (size * i, size * j), size, outfile)
     plt.imshow(finalImg)
     plt.show()
 
