@@ -13,7 +13,7 @@ How it works?
    - Determine how many lines should be drawn using the greyscale image and color thresholds
    - Draw the zigzag pattern with given number of lines to the pixel
   
-Example of original photo (left) and the end result (right). The real life size of the end result is approx. 26cmx26cm.
+Example of original photo (left) and the end result (right). Original photo is from UKK-arkisto. The real life size of the end result is approx. 26cmx26cm.
   
 ![Image of President](https://github.com/JuhaniKahara/pixelator/blob/master/images/kekko_both.png)
 
@@ -28,3 +28,12 @@ The score for a line:
 2. Sum the score of individual pixels
 
 When the best line has been chosen, set the corresponding pixels in the original image to white (=no score / minus score from these pixels from now on) before generating the next line.
+
+## Art robot in action (RandomDraw mode)
+
+The robot was built by Jaakko Mäntylä, designer and software developer from Tampere, Finland.
+
+https://user-images.githubusercontent.com/28629173/120377966-7d1a9600-c326-11eb-933a-3322ed33346e.mp4
+
+
+
