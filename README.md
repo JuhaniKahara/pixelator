@@ -27,4 +27,4 @@ The score for a line:
 2. Each pixel gets a score based on the color (scorePoint-function)
 2. Sum the score of individual pixels
 
-When the best line has been chosen, set the corresponding pixels in the original image to white (=no score / minus score from these pixels from now on)
+When the best line has been chosen, set the corresponding pixels in the original image to white (=no score / minus score from these pixels from now on) before generating the next line.
