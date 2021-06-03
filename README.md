@@ -3,9 +3,16 @@
 This project turns images in to G-code coordinates. The scripts were used in an art project in summer 2020 to produce drawing coordinates for a CNC-drawing robot.
 Two different types of approaches were used: Zigzag and RandomDraw.
 
+## Run with Python 3.6.8 (other Python 3 versions most likely work too)
+Install required python packages to your environment:
+
+`pip install -r requirements.txt`
+
 ## Method 1 - Zigzag
 
-How it works?
+Try: `python zigzag.py -s 0.5 images/man.jpeg`
+
+### How it works?
 
 1. Turns image to a greyscale image
 2. Scales it with scale parameter to get the desired amount of pixels
@@ -18,6 +25,8 @@ Example of original photo (left) and the end result (right). Original photo is f
 ![Image of President](https://github.com/JuhaniKahara/pixelator/blob/master/images/kekko_both.png)
 
 ## Method 2 - RandomDraw
+
+Try: `python randomDraw2.py images/man.jpeg` (The end result is highly dependent on the image, configs and chance)
 
 This method iteratively generates random candidate lines and draws the best one based on the original image and scoring function.
 
