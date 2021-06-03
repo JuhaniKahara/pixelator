@@ -24,21 +24,21 @@ def choose_pixels(p1, p2):
     return list(zip(np.linspace(p1[0], p2[0], d),
                    np.linspace(p1[1], p2[1],d)))
 
-def scorePoint(color):
+def scorePoint(color, whitePenalty):
     if color == 1:
-        return -1
+        return whitePenalty
     if 0.1 < color < 0.5:
         return 0
     return 1-color
 
-def scoreLine(img, pixels):
+def scoreLine(img, pixels, whitePenalty):
     score = 0
     pos = pixels[0]
     for pos in pixels:
-        score = score + scorePoint(img[pos[1], pos[0], 0])
+        score = score + scorePoint(img[pos[1], pos[0], 0], whitePenalty)
     return score
 
-def nullifyPixels(img, pixels):
+def whitenPixels(img, pixels):
     #Sets pixels to white in the template image
     for pix in pixels:
         img[pix[1]][pix[0]]=1
@@ -80,36 +80,32 @@ def handle_pixels(image, config):
             pixels = choose_pixels((x, y),(x2, y2))
             pixels = [(round(num[0]), round(num[1])) for num in pixels]
             pixelList.append(pixels)
-            scores.append(scoreLine(image, pixels))
+            scores.append(scoreLine(image, pixels, int(config['draw']['whitePenalty'])))
             points.append(((x, y),(x2, y2)))
         bestPoint=np.argmax(scores)
         bestPixels = pixelList[bestPoint]
         draw(x, y, outfile, 1)
         x = points[bestPoint][1][0]
         y = points[bestPoint][1][1]
-        image = nullifyPixels(image, bestPixels)
+        if config.getboolean('draw', 'whitenPixels'):
+            image = whitenPixels(image, bestPixels)
         finalImg = cv2.line(finalImg, points[bestPoint][0],points[bestPoint][1],(0,0,0),1)
 
     outfile.close()
     plt.imshow(finalImg)
     plt.show()
 
-def handle_image(filename, suffix, config):
+def handle_image(filename, config):
     im = Image.open(filename)
     data = np.asarray(im.convert('LA').convert('RGB')) / 255
-    print(data.shape)
-
-    print(data.shape)
     handle_pixels(data, config)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('file', metavar='file', type=str, help='Source filename')
-    parser.add_argument('suffix', metavar='suffix', type=str, help='Suffix for config and outputs')
     args = parser.parse_args()
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    print(config['draw']['nSamples'])
-    handle_image(args.file, args.suffix, config)
+    handle_image(args.file, config)
 
