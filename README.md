@@ -10,7 +10,7 @@ Install required python packages to your environment:
 
 ## Method 1 - Zigzag
 
-Try: `python zigzag.py -s 0.5 images/man.jpeg`
+Try: `python zigzag.py -s 0.1 images/man.jpeg`
 
 ### How it works?
 
